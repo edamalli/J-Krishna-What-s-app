@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    <title>J KRISHNA WhatsApp</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            background-color: #e5ddd5; /* WhatsApp background color */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            width: 90%;
+            max-width: 800px;
+            height: 90vh;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+h2 {
+            text-align: center; /* Center align the heading */
+            margin: 20px 0; /* Spacing above and below the heading */
+            padding: 20px; /* Add padding for aesthetics */
+            color: maroon; /* Set heading color */
+            font-size: 2.5em; /* Set font size */
+        }
+        .chat-list {
+            width: 30%;
+            background-color: #FFF;
+            border-right: 1px solid #ccc;
+            overflow-y: auto;
+        }
+
+        .contact {
+            padding: 10px;
+            border-bottom: 1px solid #c6c5c5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .contact:hover {
+            background-color: #f0f0f0;
+        }
+
+        .contact-name {
+            font-weight: bold;
+        }
+
+        .edit-contact {
+            background-color: #0b30d4; /* WhatsApp blue */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-size: 0.8em;
+            cursor: pointer;
+        }
+
+        .add-contact {
+            background-color: #0d069f; /* WhatsApp green */
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 15px 25px;
+            margin: 10px; /* Add some margin for spacing */
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s, transform 0.3s; /* Transition for hover effect */
+        }
+
+        .add-contact:hover {
+            background-color: #b85906; /* Darken on hover */
+            transform: scale(1.05); /* Slightly enlarge on hover */
+        }
+
+        .chat-window {
+            width: 70%;
+            display: flex;
+            flex-direction: column;
+            background-color: #FFF;
+        }
+
+        .messages {
+            flex-grow: 1;
+            padding: 10px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Spacing between messages */
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 10px;
+            border-radius: 8px;
+            position: relative;
+            display: inline-block;
+            font-size: 1em;
+            margin: 2px 0;
+            clear: both; /* Clear floats */
+        }
+
+        .sent {
+            background-color: #dcf8c6; /* Sent message background */
+            align-self: flex-end;     /* Align to the right */
+            border-bottom-right-radius: 0; /* Round only the top left */
+        }
+
+        .received {
+            background-color: #ffffff; /* Received message background */
+            align-self: flex-start;    /* Align to the left */
+            border-bottom-left-radius: 0; /* Round only the top right */
+        }
+
+        .input-area {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ccc;
+            background-color: #f8f8f8;
+        }
+
+        #messageInput {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 20px; /* Rounded input */
+            margin-right: 5px;
+        }
+
+        #sendButton {
+            border: none;
+            border-radius: 5px;
+            background-color: blue; /* WhatsApp green */
+            color: white;
+            padding: 20px 25px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        .message .delete-message {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.8em;
+            color: red;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+        }
+
+        /* Newly added style for selected contact */
+        .selected-contact {
+            background-color: #039719; /* Light green background for selected contact */
+        }
+ 
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chat-list" id="contactsDiv">
+            <h2>J KRISHNA What'sApp</h2> <!-- Added h2 element here -->
+            <div class="contact" data-contact="user1">
+                <span class="contact-name">User 1</span>
+                <button class="edit-contact" data-contact="user1">Edit</button>
+            </div>
+            <div class="contact" data-contact="user2">
+                <span class="contact-name">User 2</span>
+                <button class="edit-contact" data-contact="user2">Edit</button>
+            </div>
+            <button id="addContact" class="add-contact">Add Contact</button>
+        </div>
+        <div class="chat-window">
+            <div class="messages" id="messages"></div>
+            <div class="input-area">
+                <input type="text" id="messageInput" placeholder="Type a message...">
+                <button id="sendButton">Send</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const messagesDiv = document.getElementById("messages");
+        const messageInput = document.getElementById("messageInput");
+        const sendButton = document.getElementById("sendButton");
+        const contactsDiv = document.getElementById("contactsDiv");
+        let currentContact = localStorage.getItem("currentContact") || "user1"; // Default contact
+        let chatData = JSON.parse(localStorage.getItem("chatData")) || {};
+
+        // Load messages for the default contact
+        displayMessages();
+
+        // Function to display messages for the currently selected contact
+        function displayMessages() {
+            messagesDiv.innerHTML = ""; // Clear previous messages
+            if (chatData[currentContact]) {
+                chatData[currentContact].forEach((message, index) => {
+                    const messageDiv = document.createElement("div");
+                    messageDiv.classList.add("message", message.type);
+                    messageDiv.innerHTML = `
+                        ${message.text}
+                        <br><small>${message.date}</small>
+                        <button class="delete-message" data-index="${index}">✖</button>
+                    `;
+                    messageDiv.querySelector('.delete-message').addEventListener('click', () => {
+                        deleteMessage(index);
+                    });
+                    messagesDiv.appendChild(messageDiv);
+                });
+                messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll to bottom
+            }
+        }
+
+        // Function to send a message
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (text) {
+                if (!chatData[currentContact]) {
+                    chatData[currentContact] = []; // Initialize if no messages exist
+                }
+                chatData[currentContact].push({
+                    type: "sent",
+                    text: text,
+                    date: new Date().toLocaleString()
+                });
+                localStorage.setItem("chatData", JSON.stringify(chatData)); // Save to local storage
+                messageInput.value = ""; // Clear input
+                displayMessages(); // Refresh message display
+            }
+        }
+
+        // Function to delete a message
+        function deleteMessage(index) {
+            chatData[currentContact].splice(index, 1); // Remove message from array
+            localStorage.setItem("chatData", JSON.stringify(chatData)); // Update local storage
+            displayMessages(); // Refresh message display
+        }
+
+        // Add event listeners
+        sendButton.addEventListener("click", sendMessage);
+        messageInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                sendMessage(); // Allow sending on Enter key
+            }
+        });
+
+        // Edit contact name functionality
+        contactsDiv.addEventListener("click", (event) => {
+            if (event.target.classList.contains("edit-contact")) {
+                const contactDiv = event.target.closest('.contact');
+                const oldName = contactDiv.dataset.contact;
+                const newName = prompt("Enter new contact name:", oldName);
+                if (newName && !chatData[newName]) { // Ensure new name is valid and doesn't exist
+                    const messages = chatData[oldName];
+                    chatData[newName] = messages; // Transfer messages to new contact
+                    delete chatData[oldName]; // Delete old contact messages
+                    localStorage.setItem("chatData", JSON.stringify(chatData)); // Update local storage
+                    contactDiv.dataset.contact = newName; // Update data attribute
+                    contactDiv.querySelector(".contact-name").textContent = newName; // Update displayed name
+                } else {
+                    alert("Contact name already exists or is invalid.");
+                }
+            } else if (event.target.closest('.contact')) {
+                const contactDiv = event.target.closest('.contact');
+                const selectedContactName = contactDiv.dataset.contact;
+                if (currentContact !== selectedContactName) {
+                    selectContact(selectedContactName, contactDiv);
+                }
+            }
+        });
+
+        // Function to handle contact selection
+        function selectContact(contactName, contactDiv) {
+            // Deselect current contact
+            const currentContactDiv = document.querySelector(`.contact[data-contact="${currentContact}"]`);
+            if (currentContactDiv) {
+                currentContactDiv.classList.remove('selected-contact');
+            }
+            // Select new contact
+            currentContact = contactName;
+            localStorage.setItem("currentContact", currentContact);
+            contactDiv.classList.add('selected-contact');
+            displayMessages(); // Refresh message display for the selected contact
+        }
+
+        // Add new contact functionality
+        document.getElementById("addContact").addEventListener("click", () => {
+            const newContactName = prompt("Enter new contact name:");
+            if (newContactName && !chatData[newContactName]) {
+                chatData[newContactName] = []; // Initialize new contact with an empty array
+                localStorage.setItem("chatData", JSON.stringify(chatData)); // Save to local storage
+
+                const newContactDiv = document.createElement("div");
+                newContactDiv.className = "contact";
+                newContactDiv.setAttribute("data-contact", newContactName);
+                newContactDiv.innerHTML = `
+                    <span class="contact-name">${newContactName}</span>
+                    <button class="edit-contact" data-contact="${newContactName}">Edit</button>
+                `;
+                contactsDiv.insertBefore(newContactDiv, document.getElementById("addContact")); // Add to contact list
+            } else {
+                alert("Contact name already exists or is invalid.");
+            }
+        });
+
+        // Initialize selected contact on load
+        const initiallySelectedContact = document.querySelector(`.contact[data-contact="${currentContact}"]`);
+        if (initiallySelectedContact) {
+            initiallySelectedContact.classList.add('selected-contact');
+        }
+    </script>
+</body>
+</html>
